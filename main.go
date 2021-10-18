@@ -68,12 +68,13 @@ func run_grpc() error {
 func main() {
 	log.Println("Server has started!")
 	go func() {
-		if err := run_grpc_gateway(); err != nil {
+		if err := run_grpc(); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
-	if err := run_grpc(); err != nil {
+	if err := run_grpc_gateway(); err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Server crashed!")
 }
