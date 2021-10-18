@@ -54,7 +54,7 @@ func run_grpc_gateway() error {
 	}
 
 	// Start HTTP server (and proxy calls to gRPC server endpoint)
-	return http.ListenAndServe(":80", mux)
+	return http.ListenAndServe(":8080", mux)
 }
 func run_grpc() error {
 	lis, err := net.Listen("tcp", ":9090")
