@@ -3,7 +3,7 @@ syntax = "proto3";
 option go_package = "./proto";
 
 service Service{
-    rpc Match (MatchRequest) returns (stream MatchResponse) {}
+    rpc Match (MatchRequest) returns (MatchResponse) {}
     rpc StartChat (stream Message) returns (stream Message) {}
 }
 

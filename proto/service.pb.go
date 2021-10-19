@@ -407,13 +407,13 @@ var file_service_proto_rawDesc = []byte{
 	0x79, 0x88, 0x01, 0x01, 0x42, 0x0a, 0x0a, 0x08, 0x5f, 0x63, 0x68, 0x61, 0x74, 0x4b, 0x65, 0x79,
 	0x22, 0x1d, 0x0a, 0x07, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74,
 	0x65, 0x78, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x65, 0x78, 0x74, 0x32,
-	0x5c, 0x0a, 0x07, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x2a, 0x0a, 0x05, 0x4d, 0x61,
+	0x5a, 0x0a, 0x07, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x28, 0x0a, 0x05, 0x4d, 0x61,
 	0x74, 0x63, 0x68, 0x12, 0x0d, 0x2e, 0x4d, 0x61, 0x74, 0x63, 0x68, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x1a, 0x0e, 0x2e, 0x4d, 0x61, 0x74, 0x63, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x00, 0x30, 0x01, 0x12, 0x25, 0x0a, 0x09, 0x53, 0x74, 0x61, 0x72, 0x74, 0x43,
-	0x68, 0x61, 0x74, 0x12, 0x08, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a, 0x08, 0x2e,
-	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x00, 0x28, 0x01, 0x30, 0x01, 0x42, 0x09, 0x5a,
-	0x07, 0x2e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x65, 0x22, 0x00, 0x12, 0x25, 0x0a, 0x09, 0x53, 0x74, 0x61, 0x72, 0x74, 0x43, 0x68, 0x61,
+	0x74, 0x12, 0x08, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a, 0x08, 0x2e, 0x4d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x00, 0x28, 0x01, 0x30, 0x01, 0x42, 0x09, 0x5a, 0x07, 0x2e,
+	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -556,7 +556,7 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ServiceClient interface {
-	Match(ctx context.Context, in *MatchRequest, opts ...grpc.CallOption) (Service_MatchClient, error)
+	Match(ctx context.Context, in *MatchRequest, opts ...grpc.CallOption) (*MatchResponse, error)
 	StartChat(ctx context.Context, opts ...grpc.CallOption) (Service_StartChatClient, error)
 }
 
@@ -568,40 +568,17 @@ func NewServiceClient(cc grpc.ClientConnInterface) ServiceClient {
 	return &serviceClient{cc}
 }
 
-func (c *serviceClient) Match(ctx context.Context, in *MatchRequest, opts ...grpc.CallOption) (Service_MatchClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Service_serviceDesc.Streams[0], "/Service/Match", opts...)
+func (c *serviceClient) Match(ctx context.Context, in *MatchRequest, opts ...grpc.CallOption) (*MatchResponse, error) {
+	out := new(MatchResponse)
+	err := c.cc.Invoke(ctx, "/Service/Match", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &serviceMatchClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type Service_MatchClient interface {
-	Recv() (*MatchResponse, error)
-	grpc.ClientStream
-}
-
-type serviceMatchClient struct {
-	grpc.ClientStream
-}
-
-func (x *serviceMatchClient) Recv() (*MatchResponse, error) {
-	m := new(MatchResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 func (c *serviceClient) StartChat(ctx context.Context, opts ...grpc.CallOption) (Service_StartChatClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Service_serviceDesc.Streams[1], "/Service/StartChat", opts...)
+	stream, err := c.cc.NewStream(ctx, &_Service_serviceDesc.Streams[0], "/Service/StartChat", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -633,7 +610,7 @@ func (x *serviceStartChatClient) Recv() (*Message, error) {
 
 // ServiceServer is the server API for Service service.
 type ServiceServer interface {
-	Match(*MatchRequest, Service_MatchServer) error
+	Match(context.Context, *MatchRequest) (*MatchResponse, error)
 	StartChat(Service_StartChatServer) error
 }
 
@@ -641,8 +618,8 @@ type ServiceServer interface {
 type UnimplementedServiceServer struct {
 }
 
-func (*UnimplementedServiceServer) Match(*MatchRequest, Service_MatchServer) error {
-	return status.Errorf(codes.Unimplemented, "method Match not implemented")
+func (*UnimplementedServiceServer) Match(context.Context, *MatchRequest) (*MatchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Match not implemented")
 }
 func (*UnimplementedServiceServer) StartChat(Service_StartChatServer) error {
 	return status.Errorf(codes.Unimplemented, "method StartChat not implemented")
@@ -652,25 +629,22 @@ func RegisterServiceServer(s *grpc.Server, srv ServiceServer) {
 	s.RegisterService(&_Service_serviceDesc, srv)
 }
 
-func _Service_Match_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(MatchRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _Service_Match_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(ServiceServer).Match(m, &serviceMatchServer{stream})
-}
-
-type Service_MatchServer interface {
-	Send(*MatchResponse) error
-	grpc.ServerStream
-}
-
-type serviceMatchServer struct {
-	grpc.ServerStream
-}
-
-func (x *serviceMatchServer) Send(m *MatchResponse) error {
-	return x.ServerStream.SendMsg(m)
+	if interceptor == nil {
+		return srv.(ServiceServer).Match(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Service/Match",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).Match(ctx, req.(*MatchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Service_StartChat_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -702,13 +676,13 @@ func (x *serviceStartChatServer) Recv() (*Message, error) {
 var _Service_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "Service",
 	HandlerType: (*ServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
+	Methods: []grpc.MethodDesc{
 		{
-			StreamName:    "Match",
-			Handler:       _Service_Match_Handler,
-			ServerStreams: true,
+			MethodName: "Match",
+			Handler:    _Service_Match_Handler,
 		},
+	},
+	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "StartChat",
 			Handler:       _Service_StartChat_Handler,

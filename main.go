@@ -1,24 +1,4 @@
-/*package main
 
-import (
-	"fmt"
-	//
-	//"google.golang.org/grpc"
-)
-
-func main() {
-	fmt.Println("dvxcvcxd")
-
-	lis, err := net.Listen("tcp", ":9090")
-	if err != nil {
-		log.Println("failed to listen: %v", err)
-	}
-	s := grpc.NewServer()
-	RegisterServiceServer(s, &server{})
-	if err := s.Serve(lis); err != nil {
-		log.Println("failed to serve: %v", err)
-	}
-}*/
 package main
 
 import (

@@ -4,11 +4,13 @@ import (
 	//"log"
 
 	"time"
-
+	"context"
 	geo "github.com/kellydunn/golang-geo"
 	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
 	"github.com/sethvargo/go-password/password"
 )
+
+const MAX_WAITING_TIME_SECONDS = 10
 
 type waiter struct {
 	Gender   proto.MatchRequest_Gender
@@ -35,15 +37,16 @@ type server struct {
 }
 
 func newServer() *server {
-	server := server{chans: make(map[string]string),
-		chats: make(map[string]chan proto.Message)}
+	server := server{
+			chans: make(map[string]string),
+			chats: make(map[string]chan proto.Message)}
 	go func() {
 		for {
 			time.Sleep(2 * time.Second)
 			now := time.Now()
 			whatToRemove := make([]int, 0)
 			for i, waiter := range server.queue {
-				if now.Sub(waiter.InsertionTime).Seconds() > 10 {
+				if now.Sub(waiter.InsertionTime).Seconds() > MAX_WAITING_TIME_SECONDS {
 					whatToRemove = append(whatToRemove, i)
 				}
 			}
@@ -55,7 +58,7 @@ func newServer() *server {
 	return &server
 }
 
-func (server *server) Match(matchRequest *proto.MatchRequest, stream proto.Service_MatchServer) error {
+func (server *server) Match(ctx context.Context, matchRequest *proto.MatchRequest) (*proto.MatchResponse, error) {
 	gender := matchRequest.GetMyInfo().GetGender()
 	age := matchRequest.GetMyInfo().GetAge()
 	location := geo.NewPoint(matchRequest.GetMyInfo().GetLatitude(), matchRequest.GetMyInfo().GetLongitude())
@@ -67,7 +70,7 @@ func (server *server) Match(matchRequest *proto.MatchRequest, stream proto.Servi
 
 	// check parameters
 	if gender == proto.MatchRequest_Unknown || age < 18 || age > 100 || location.Lat() < -90 || location.Lat() > 90 || location.Lng() < -180 || location.Lat() > 180 || target_min_age < 18 || target_max_age > 100 || target_min_age > target_max_age {
-		return nil
+		return nil, nil
 	}
 
 	me := waiter{Gender: gender,
@@ -78,43 +81,46 @@ func (server *server) Match(matchRequest *proto.MatchRequest, stream proto.Servi
 		Target_max_age:         target_max_age,
 		Target_max_distance_km: target_max_distance_km}
 	// search for a match
-	for _, waiter := range (*server).queue {
+	for _, waiter := range server.queue {
 		if me.can_match(waiter) && waiter.can_match(me) {
 			// it's a match!
 			var key1, key2 string
+			var err error
 			for {
-				key1, err := password.Generate(20, 10, 10, false, false)
-				if err == nil {
-					return err
+				key1, err = password.Generate(20, 10, 10, false, false)
+				if err != nil {
+					return nil, err
 				}
-				if _, exist := (*server).chans[key1]; !exist {
+				if _, exist := server.chans[key1]; !exist {
 					break
 				}
 			}
 			for {
-				key2, err := password.Generate(20, 10, 10, false, false)
-				if err == nil {
-					return err
+				key2, err = password.Generate(20, 10, 10, false, false)
+				if err != nil {
+					return nil, err
 				}
-				if _, exist := (*server).chans[key2]; !exist {
+				if _, exist := server.chans[key2]; !exist && key2 != key1 {
 					break
 				}
 			}
-			(*server).chans[key1] = key2
-			(*server).chans[key2] = key1
-			(*server).chats[key1] = make(chan proto.Message)
-			(*server).chats[key2] = make(chan proto.Message)
+			server.chans[key1] = key2
+			server.chans[key2] = key1
+			server.chats[key1] = make(chan proto.Message)
+			server.chats[key2] = make(chan proto.Message)
 
 			waiter.Callback(key2)
-			stream.Send(&proto.MatchResponse{ChatKey: &key1})
+			return &proto.MatchResponse{ChatKey: &key1}, nil
 		}
 	}
 	// no match found, so I have to append me to the queue
+	c := make(chan string)
 	me.Callback = func(key string) {
-		stream.Send(&proto.MatchResponse{ChatKey: &key})
+		c<-key
 	}
-	(*server).queue = append((*server).queue, me)
-	return nil
+	server.queue = append(server.queue, me)
+	key := <-c
+	return &proto.MatchResponse{ChatKey: &key}, nil
 }
 func (server *server) StartChat(stream proto.Service_StartChatServer) error {
 	return nil
