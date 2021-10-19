@@ -1,16 +1,16 @@
-
 package main
 
 import (
 	"context"
 	"flag"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
-	"google.golang.org/grpc"
 	"log"
 	"net"
 	"net/http"
 	"os"
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
+	"google.golang.org/grpc"
 )
 
 var (

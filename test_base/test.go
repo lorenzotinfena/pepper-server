@@ -2,13 +2,11 @@ package main
 
 import (
 	"log"
-	"time"
+	
+		"context"
 
-	"context"
-
-	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
-	"google.golang.org/grpc"
-)
+		"github.com/lorenzotinfena/chat-and-meet/proto" // Update
+		"google.golang.org/grpc")
 
 func main() {
 	conn, err := grpc.Dial("localhost:9090", grpc.WithInsecure(), grpc.WithBlock())
@@ -28,12 +26,4 @@ func main() {
 		log.Fatalf("could not greet: %v", err)
 	}
 	log.Println("chat key: " + res.GetChatKey())
-	stream, err := c.StartChat(context.Background())
-	if err != nil {
-		log.Fatal(err)
-	}
-	for{
-		time.Sleep(100*time.Millisecond)
-		stream.Send(&proto.Message{Text: "ciaoo"})
-	}
 }
