@@ -25,12 +25,12 @@ import (
 	"context"
 	"flag"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
 	"google.golang.org/grpc"
 	"log"
 	"net"
 	"net/http"
-
-	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
+	"os"
 )
 
 var (
@@ -54,10 +54,14 @@ func run_grpc_gateway() error {
 	}
 
 	// Start HTTP server (and proxy calls to gRPC server endpoint)
-	return http.ListenAndServe(":8080", mux)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	return http.ListenAndServe(":"+ port, mux)
 }
 func run_grpc() error {
-	lis, err := net.Listen("tcp", ":9090")
+	lis, err := net.Listen("tcp", "localhost:9090")
 	if err != nil {
 		return err
 	}
