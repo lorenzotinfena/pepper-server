@@ -10,7 +10,6 @@ package proto
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -162,7 +161,6 @@ func RegisterServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *gr
 func RegisterServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client ServiceClient) error {
 
 	mux.Handle("POST", pattern_Service_Match_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		fmt.Println("CANCELLAMIIIIIIIIIII")
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -183,7 +181,6 @@ func RegisterServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 	})
 
 	mux.Handle("POST", pattern_Service_StartChat_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		fmt.Println("CANCELLAMIIIIIIIIIII")
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
