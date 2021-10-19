@@ -20,7 +20,7 @@ message MatchRequest {
         double longitude = 4;
     }
     message Preferences {
-        int32 kilometersRange = 1;
+        uint32 kilometersRange = 1; // 25000 = all world
         Gender gender = 2;
         uint32 minAge = 3;
         uint32 maxAge = 4;
