@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.6.0
 	github.com/kellydunn/golang-geo v0.7.0
+	github.com/sethvargo/go-password v0.2.0
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 )

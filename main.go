@@ -66,7 +66,7 @@ func run_grpc() error {
 		return err
 	}
 	s := grpc.NewServer()
-	proto.RegisterServiceServer(s, &server{})
+	proto.RegisterServiceServer(s, newServer())
 	return s.Serve(lis)
 }
 func main() {
