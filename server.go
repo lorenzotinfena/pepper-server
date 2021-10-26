@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"log"
+	"log"
 
 	"context"
 	"sync"
@@ -61,6 +61,7 @@ func newServer() *server {
 }
 
 func (server *server) Match(ctx context.Context, matchRequest *proto.MatchRequest) (*proto.MatchResponse, error) {
+	log.Println("Match call")
 	gender := matchRequest.GetMyInfo().GetGender()
 	age := matchRequest.GetMyInfo().GetAge()
 	location := geo.NewPoint(matchRequest.GetMyInfo().GetLatitude(), matchRequest.GetMyInfo().GetLongitude())
@@ -88,6 +89,7 @@ func (server *server) Match(ctx context.Context, matchRequest *proto.MatchReques
 		mu.Lock()
 		if me.can_match(waiter) && waiter.can_match(me) {
 			// it's a match!
+			log.Println("new match!")
 			var key1, key2 string
 			var err error
 			for {
@@ -137,6 +139,7 @@ func (server *server) cleanChat(key string) {
 
 //TODO: ogni tanto controllare i chans e le chat non ancora partire, ed eliminarle, e magari passare la chiave nei metadati del context
 func (server *server) StartChat(stream proto.Service_StartChatServer) error {
+	log.Println("StartChat call")
 	// check validity
 	first, err := stream.Recv()
 	if err != nil {
