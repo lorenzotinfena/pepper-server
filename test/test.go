@@ -3,9 +3,7 @@ package main
 import (
 	"log"
 	"time"
-
 	"context"
-
 	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
 	"google.golang.org/grpc"
 )
