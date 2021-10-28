@@ -3,7 +3,6 @@ module github.com/lorenzotinfena/chat-and-meet
 go 1.17
 
 require (
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.6.0
 	github.com/kellydunn/golang-geo v0.7.0
 	github.com/sethvargo/go-password v0.2.0
 	google.golang.org/grpc v1.41.0
@@ -13,6 +12,7 @@ require (
 require (
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/kylelemons/go-gypsy v1.0.0 // indirect
 	github.com/lib/pq v1.10.3 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
