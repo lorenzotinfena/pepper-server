@@ -1,8 +1,8 @@
 package main
 
 import (
-	"log"
 	"time"
+	"log"
 	"context"
 	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
 	"google.golang.org/grpc"
@@ -30,8 +30,20 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	stream.Send(&proto.Message{Text: res.GetChatKey()})
+	go func () {
+		for{
+			time.Sleep(2*time.Second)
+			stream.Send(&proto.Message{Text: "Hei ciao sono lùlù"})
+		}
+	}()
 	for{
-		time.Sleep(100*time.Millisecond)
-		stream.Send(&proto.Message{Text: "ciaoo"})
+		for {
+			mes, err := stream.Recv()
+			if err != nil {
+				stream.Send(&proto.Message{Text: "Ho ricevuto: " + mes.Text})
+			}
+		}
+		
 	}
 }

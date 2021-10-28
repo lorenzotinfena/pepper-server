@@ -12,7 +12,7 @@ import (
 	"github.com/sethvargo/go-password/password"
 )
 
-const MAX_WAITING_TIME_SECONDS = 100
+const MAX_WAITING_TIME_SECONDS = 1000000
 
 type waiter struct {
 	Gender   proto.MatchRequest_Gender
