@@ -1,14 +1,16 @@
 package main
 
 import (
-	"time"
-	"log"
 	"context"
+	"log"
+	"time"
+
 	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
 	"google.golang.org/grpc"
 )
 
-func main() {
+func _main() {
+	time.Sleep(15 * time.Second)
 	conn, err := grpc.Dial("localhost:9090", grpc.WithInsecure(), grpc.WithBlock())
 	log.Println("connected")
 	if err != nil {
@@ -31,19 +33,19 @@ func main() {
 		log.Fatal(err)
 	}
 	stream.Send(&proto.Message{Text: res.GetChatKey()})
-	go func () {
-		for{
-			time.Sleep(2*time.Second)
+	go func() {
+		for {
+			time.Sleep(2 * time.Second)
 			stream.Send(&proto.Message{Text: "Hei ciao sono lùlù"})
 		}
 	}()
-	for{
+	for {
 		for {
 			mes, err := stream.Recv()
 			if err != nil {
 				stream.Send(&proto.Message{Text: "Ho ricevuto: " + mes.Text})
 			}
 		}
-		
+
 	}
 }
