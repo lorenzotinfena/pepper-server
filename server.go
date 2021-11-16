@@ -6,12 +6,13 @@ import (
 	"context"
 	"sync"
 	"time"
+
 	geo "github.com/kellydunn/golang-geo"
 	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
 	"github.com/sethvargo/go-password/password"
 )
 
-const MAX_WAITING_TIME_SECONDS = 1000000
+const MAX_WAITING_TIME_SECONDS = 15
 
 type waiter struct {
 	Gender   proto.MatchRequest_Gender
@@ -23,8 +24,8 @@ type waiter struct {
 	Target_max_age         uint32
 	Target_max_distance_km uint32
 
-	Callback      func(key string)
-	InsertionTime time.Time
+	Callback func(key string)
+	id       uint64
 }
 
 func (me *waiter) can_match(dude waiter) bool {
@@ -45,7 +46,7 @@ func newServer() *server {
 		chats:         make(map[string]chan string),
 		waitingToChat: make(map[string]chan interface{}),
 		mutex:         sync.Mutex{}}
-	go func() {
+	/*go func() {
 		for {
 			time.Sleep(2 * time.Second)
 			now := time.Now()
@@ -59,10 +60,10 @@ func newServer() *server {
 				server.queue = append(server.queue[:i], server.queue[i+1:]...)
 			}
 		}
-	}()
+	}()*/
 	return &server
 }
-
+var id uint64 = 0
 func (server *server) Match(ctx context.Context, matchRequest *proto.MatchRequest) (*proto.MatchResponse, error) {
 	log.Println("Match call")
 	gender := matchRequest.GetMyInfo().GetGender()
@@ -87,8 +88,8 @@ func (server *server) Match(ctx context.Context, matchRequest *proto.MatchReques
 		Target_max_age:         target_max_age,
 		Target_max_distance_km: target_max_distance_km}
 	// search for a match
+	server.mutex.Lock()
 	for i, waiter := range server.queue {
-		server.mutex.Lock()
 		if me.can_match(waiter) && waiter.can_match(me) {
 			// it's a match!
 			log.Println("new match!")
@@ -119,7 +120,7 @@ func (server *server) Match(ctx context.Context, matchRequest *proto.MatchReques
 			server.chats[key1] = make(chan string)
 			server.chats[key2] = make(chan string)
 
-			server.queue = append(server.queue[:i], server.queue[i+1:]...) //remove this element, will be better using a mutax
+			server.queue = append(server.queue[:i], server.queue[i+1:]...)
 			server.mutex.Unlock()
 			checkClientwaitToStartChat := func(key string) {
 				defer delete(server.waitingToChat, key)
@@ -138,17 +139,32 @@ func (server *server) Match(ctx context.Context, matchRequest *proto.MatchReques
 			waiter.Callback(key2)
 			return &proto.MatchResponse{ChatKey: &key1}, nil
 		}
-		server.mutex.Unlock()
 	}
 	// no match found, so I have to append me to the queue
 	c := make(chan string)
 	me.Callback = func(key string) {
 		c <- key
 	}
-	me.InsertionTime = time.Now()
+	me.id = id
+	id++
 	server.queue = append(server.queue, me)
-	key := <-c
-	return &proto.MatchResponse{ChatKey: &key}, nil
+	server.mutex.Unlock()
+	select {
+	case <-time.After(MAX_WAITING_TIME_SECONDS * time.Second):
+		server.mutex.Lock()
+		var index int
+		for i, el := range server.queue {
+			if el.id == me.id {
+				index = i
+				break
+			}
+		}
+		server.queue = append(server.queue[:index], server.queue[index+1:]...)
+		server.mutex.Unlock()
+		return &proto.MatchResponse{}, nil
+	case key := <-c:
+		return &proto.MatchResponse{ChatKey: &key}, nil
+	}
 }
 func (server *server) cleanChat(key string) {
 	server.mutex.Lock()
@@ -157,7 +173,6 @@ func (server *server) cleanChat(key string) {
 	server.mutex.Unlock()
 }
 
-//TODO: ogni tanto controllare i chans e le chat non ancora partite, ed eliminarle, e magari passare la chiave nei metadati del context
 func (server *server) StartChat(stream proto.Service_StartChatServer) error {
 	log.Println("StartChat call")
 	// check validity
@@ -166,7 +181,6 @@ func (server *server) StartChat(stream proto.Service_StartChatServer) error {
 		return nil
 	}
 	to_write_key := first.GetText()
-	log.Println(to_write_key)
 	to_read_key, exist := server.chans[to_write_key]
 	if !exist {
 		return nil
@@ -195,7 +209,7 @@ func (server *server) StartChat(stream proto.Service_StartChatServer) error {
 			select {
 			case <-stopChan:
 				return
-			case mes= <-message_received_chan:
+			case mes = <-message_received_chan:
 				if mes == nil {
 					to_write_chan <- "EOF"
 					return
