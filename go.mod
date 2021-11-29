@@ -1,4 +1,4 @@
-module github.com/lorenzotinfena/chat-and-meet
+module github.com/lorenzotinfena/pepper-server
 
 go 1.17
 

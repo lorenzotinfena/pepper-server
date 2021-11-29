@@ -2,11 +2,12 @@ package main
 
 import (
 	"log"
-	
-		"context"
 
-		"github.com/lorenzotinfena/chat-and-meet/proto" // Update
-		"google.golang.org/grpc")
+	"context"
+
+	"github.com/lorenzotinfena/pepper-server/proto" // Update
+	"google.golang.org/grpc"
+)
 
 func main() {
 	conn, err := grpc.Dial("localhost:9090", grpc.WithInsecure(), grpc.WithBlock())

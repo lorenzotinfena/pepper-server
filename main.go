@@ -3,11 +3,9 @@ package main
 import (
 	"log"
 	"net"
-	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
+	"github.com/lorenzotinfena/pepper-server/proto" // Update
 	"google.golang.org/grpc"
 )
-
-
 
 func run_grpc() error {
 	lis, err := net.Listen("tcp", ":9090")

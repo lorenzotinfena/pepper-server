@@ -1,5 +1,11 @@
-chat-and-meet-server
+pepper-server-server
 
 # How compile .proto
 - for go:
-    https://github.com/namely/docker-protoc
+    
+    In powershell:
+    ```
+    docker run -v ${pwd}:/defs namely/protoc-all -f service.proto -l go
+    ```
+
+    from: https://github.com/namely/docker-protoc

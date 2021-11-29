@@ -8,7 +8,7 @@ import (
 	"time"
 
 	geo "github.com/kellydunn/golang-geo"
-	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
+	"github.com/lorenzotinfena/pepper-server/proto" // Update
 	"github.com/sethvargo/go-password/password"
 )
 
@@ -48,12 +48,15 @@ func newServer() *server {
 		mutex:         sync.Mutex{}}
 	return &server
 }
+
 var id uint64 = 0
+
 func (server *server) Match(ctx context.Context, matchRequest *proto.MatchRequest) (*proto.MatchResponse, error) {
 	log.Println("Match call")
-	go func(){
+	go func() {
 		select {
-		case <-ctx.Done(): log.Println("done")
+		case <-ctx.Done():
+			log.Println("done")
 		}
 	}()
 	gender := matchRequest.GetMyInfo().GetGender()

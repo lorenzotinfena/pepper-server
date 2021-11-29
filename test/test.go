@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/lorenzotinfena/chat-and-meet/proto" // Update
+	"github.com/lorenzotinfena/pepper-server/proto" // Update
 	"google.golang.org/grpc"
 )
 
