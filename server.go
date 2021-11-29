@@ -46,26 +46,16 @@ func newServer() *server {
 		chats:         make(map[string]chan string),
 		waitingToChat: make(map[string]chan interface{}),
 		mutex:         sync.Mutex{}}
-	/*go func() {
-		for {
-			time.Sleep(2 * time.Second)
-			now := time.Now()
-			whatToRemove := make([]int, 0)
-			for i, waiter := range server.queue {
-				if now.Sub(waiter.InsertionTime).Seconds() > MAX_WAITING_TIME_SECONDS {
-					whatToRemove = append(whatToRemove, i)
-				}
-			}
-			for _, i := range whatToRemove {
-				server.queue = append(server.queue[:i], server.queue[i+1:]...)
-			}
-		}
-	}()*/
 	return &server
 }
 var id uint64 = 0
 func (server *server) Match(ctx context.Context, matchRequest *proto.MatchRequest) (*proto.MatchResponse, error) {
 	log.Println("Match call")
+	go func(){
+		select {
+		case <-ctx.Done(): log.Println("done")
+		}
+	}()
 	gender := matchRequest.GetMyInfo().GetGender()
 	age := matchRequest.GetMyInfo().GetAge()
 	location := geo.NewPoint(matchRequest.GetMyInfo().GetLatitude(), matchRequest.GetMyInfo().GetLongitude())
@@ -211,7 +201,7 @@ func (server *server) StartChat(stream proto.Service_StartChatServer) error {
 				return
 			case mes = <-message_received_chan:
 				if mes == nil {
-					to_write_chan <- "EOF"
+					to_write_chan <- "EOFEOF"
 					return
 				}
 				to_write_chan <- mes.GetText()
@@ -220,12 +210,13 @@ func (server *server) StartChat(stream proto.Service_StartChatServer) error {
 	}()
 	for {
 		for text := range to_read_chan {
-			if text == "EOF" {
+			if text == "EOFEOF" {
 				stopChan <- true
-				to_write_chan <- "EOF"
+				to_write_chan <- "EOFEOF"
 				log.Println("Chat ended")
 				return nil
 			}
+			stream.Context().Err()
 			stream.Send(&proto.Message{Text: text})
 		}
 	}
