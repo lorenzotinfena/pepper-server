@@ -3,8 +3,10 @@ package main
 import (
 	"log"
 	"net"
+
 	"github.com/lorenzotinfena/pepper-server/proto" // Update
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func run_grpc() error {
@@ -12,7 +14,8 @@ func run_grpc() error {
 	if err != nil {
 		return err
 	}
-	s := grpc.NewServer()
+	creds, _ := credentials.NewServerTLSFromFile("certificate.pem", "key.pem")
+	s := grpc.NewServer(grpc.Creds(creds))
 	proto.RegisterServiceServer(s, newServer())
 	return s.Serve(lis)
 }

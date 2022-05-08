@@ -37,6 +37,9 @@ func gen(ctx context.Context) <-chan int {
 }
 
 func main() {
+	c := make(chan bool)
+	c <- true
+	fmt.Println("oioioi")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

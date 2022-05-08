@@ -1,16 +1,18 @@
 package main
 
 import (
-	"context"
+	/*"context"
 	"log"
 	"time"
 
 	"github.com/lorenzotinfena/pepper-server/proto" // Update
 	"google.golang.org/grpc"
+	*/
 )
 
 func _main() {
-	time.Sleep(15 * time.Second)
+
+	/*time.Sleep(15 * time.Second)
 	conn, err := grpc.Dial("localhost:9090", grpc.WithInsecure(), grpc.WithBlock())
 	log.Println("connected")
 	if err != nil {
@@ -47,5 +49,5 @@ func _main() {
 			}
 		}
 
-	}
+	}*/
 }

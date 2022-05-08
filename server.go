@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 
 	"context"
@@ -53,12 +54,7 @@ var id uint64 = 0
 
 func (server *server) Match(ctx context.Context, matchRequest *proto.MatchRequest) (*proto.MatchResponse, error) {
 	log.Println("Match call")
-	go func() {
-		select {
-		case <-ctx.Done():
-			log.Println("done")
-		}
-	}()
+
 	gender := matchRequest.GetMyInfo().GetGender()
 	age := matchRequest.GetMyInfo().GetAge()
 	location := geo.NewPoint(matchRequest.GetMyInfo().GetLatitude(), matchRequest.GetMyInfo().GetLongitude())
@@ -80,6 +76,7 @@ func (server *server) Match(ctx context.Context, matchRequest *proto.MatchReques
 		Target_min_age:         target_min_age,
 		Target_max_age:         target_max_age,
 		Target_max_distance_km: target_max_distance_km}
+
 	// search for a match
 	server.mutex.Lock()
 	for i, waiter := range server.queue {
@@ -121,7 +118,7 @@ func (server *server) Match(ctx context.Context, matchRequest *proto.MatchReques
 				case <-server.waitingToChat[key]:
 					return
 				case <-time.After(3 * time.Second):
-					server.chats[server.chans[key]] <- "EOF"
+					server.chats[server.chans[key]] <- "EOFEOF"
 					server.cleanChat(key)
 				}
 			}
@@ -142,8 +139,8 @@ func (server *server) Match(ctx context.Context, matchRequest *proto.MatchReques
 	id++
 	server.queue = append(server.queue, me)
 	server.mutex.Unlock()
-	select {
-	case <-time.After(MAX_WAITING_TIME_SECONDS * time.Second):
+
+	remove_me_from_queue := func(){
 		server.mutex.Lock()
 		var index int
 		for i, el := range server.queue {
@@ -154,6 +151,13 @@ func (server *server) Match(ctx context.Context, matchRequest *proto.MatchReques
 		}
 		server.queue = append(server.queue[:index], server.queue[index+1:]...)
 		server.mutex.Unlock()
+	}
+	select {
+	case <-ctx.Done(): // handle client disconnection
+		remove_me_from_queue()
+		return nil, errors.New("client disconnected")
+	case <-time.After(MAX_WAITING_TIME_SECONDS * time.Second):
+		remove_me_from_queue()
 		return &proto.MatchResponse{}, nil
 	case key := <-c:
 		return &proto.MatchResponse{ChatKey: &key}, nil
@@ -183,44 +187,24 @@ func (server *server) StartChat(stream proto.Service_StartChatServer) error {
 
 	to_write_chan := server.chats[to_write_key]
 	to_read_chan := server.chats[to_read_key]
-	stopChan := make(chan bool)
 	// start chat
-	message_received_chan := make(chan *proto.Message)
 	go func() {
 		for {
 			mes, err := stream.Recv()
-			if err != nil {
-				message_received_chan <- nil
+			if err != nil || mes.GetText() == "EOFEOF" {
+				to_write_chan <- "EOFEOF"
 				return
 			}
-			message_received_chan <- mes
-		}
-	}()
-	go func() {
-		for {
-			var mes *proto.Message
-			select {
-			case <-stopChan:
-				return
-			case mes = <-message_received_chan:
-				if mes == nil {
-					to_write_chan <- "EOFEOF"
-					return
-				}
-				to_write_chan <- mes.GetText()
-			}
+			to_write_chan <- mes.GetText()
 		}
 	}()
 	for {
-		for text := range to_read_chan {
-			if text == "EOFEOF" {
-				stopChan <- true
-				to_write_chan <- "EOFEOF"
-				log.Println("Chat ended")
-				return nil
-			}
+		text := <- to_read_chan
+		if text == "EOFEOF" {
+			log.Println("Chat ended")
 			stream.Context().Err()
-			stream.Send(&proto.Message{Text: text})
+			return nil
 		}
+		stream.Send(&proto.Message{Text: text})
 	}
 }

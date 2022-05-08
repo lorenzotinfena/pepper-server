@@ -9,3 +9,7 @@ pepper-server-server
     ```
 
     from: https://github.com/namely/docker-protoc
+# Self-sign TLS certificate
+```
+req -newkey rsa:4096 -nodes -keyout key.pem -x509 -days 36500 -out certificate.pem
+```
