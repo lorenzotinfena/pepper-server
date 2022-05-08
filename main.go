@@ -14,8 +14,15 @@ func run_grpc() error {
 	if err != nil {
 		return err
 	}
-	creds, _ := credentials.NewServerTLSFromFile("certificate.pem", "key.pem")
-	s := grpc.NewServer(grpc.Creds(creds))
+
+	DEBUGGING := true
+	var s *grpc.Server
+	if DEBUGGING {
+		s = grpc.NewServer()
+	} else {
+		creds, _ := credentials.NewServerTLSFromFile("certificate.pem", "key.pem")
+		s = grpc.NewServer(grpc.Creds(creds))
+	}
 	proto.RegisterServiceServer(s, newServer())
 	return s.Serve(lis)
 }
